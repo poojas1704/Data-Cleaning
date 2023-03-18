@@ -1,0 +1,267 @@
+---
+title: "PS1: Data cleaning and data-based discussion"
+author: "Pooja Sadarangani"
+
+date: "2022-10-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Collaborated with: "Pranali Oza, Menita Agarwal, Kinjal Raut"
+
+# Basic R Programming
+
+## Question 1: Write a function that takes in time in the form of HHMM (hours-minutes) as a number and returns it as HH.HH (hours, fractions of hours) as a number. For instance, it should convert 730 (7h 30m) into 7.5 (7.5 hrs) and 1245 into 12.75. Assume the argument is passed as a number, and it should return a number, i.e. not print it but return.Test it demonstrating that 730 and 1245 are converted correctly.
+
+```{r}
+# Creating a function which takes time in form hhmm and returns it as hh.hh
+
+convert_timeform <- function(hhmm){
+  hours <- hhmm %/% 100 # we get the number of hours
+  minutes <- hhmm %% 100 # we get number of minutes
+  fraction_of_hours <- minutes/60 # we get fraction of hours
+  converted_time <- hours + fraction_of_hours # returning it in hh.hh format
+  return(converted_time)
+}
+
+convert_timeform(730)
+
+convert_timeform(1245)
+```
+
+## Question 2: Use a for-loop to extract only positive numbers from this vector.
+
+```{r}
+set.seed(1)
+v <- sample(10, 20, replace = TRUE) - 5
+v
+```
+
+```{r}
+
+output <- c()
+iterate <- 1
+
+# iterate over the sample  v
+for (count in 1:20){
+  if (v[count] > 0){ # if value is positive then append the value in a dummy vector
+  output[iterate] <- v[count]
+  iterate <- iterate + 1
+  }
+}
+cat("Positive numbers in this vector are: ", output)
+
+```
+
+## Question 3: Perform the same task without the loop using logical indexing instead.
+
+```{r}
+v[v>0]
+cat("Positive numbers in this vector are: ", output)
+```
+
+## Question 4: Write a function that tests if the vectors have negative elements, and prints an appropriate message.Test the negativity of these three vectors to show the function works correctly.
+
+```{r}
+v1 <- 9
+v2 <- c(1,2)
+v3 <- c(2,3,-4)
+
+vector_negativity_test <- function(vector){
+    if (any(vector<0)){
+      print("The vector has negative elements")
+    } else{
+      print("The vector does not have any negative elements")
+    }
+}
+
+vector_negativity_test(v1)
+vector_negativity_test(v2)
+vector_negativity_test(v3)
+```
+
+# Data Exploration
+
+## Basic Data Description
+
+### Question 1: Before even looking at the data, what do you think, were you be able to answer the question if you have access to a suitable dataset and respective analysis tools? What might the answer look like? Maybe you know what the answer is?
+
+#### Before even looking at the data, I am not able to answer the above question. However, if provided with suitable data set and respective analysis tools, I would be in a better position to derive an answer. But again, the answer to the question would vary according to the definition of dangerous. Is it more dangerous if the fatality of the attacks are more? Or is it more dangerous if the number of attacks are more irrrespective of the fatality? 
+
+### Question 2: Load Data and find out the number of variables and cases
+```{r}
+# load file 
+library("readxl")
+data <- read_excel("GSAF5.xls")
+# Prin the number of columns and rows in the dataset
+cat("The number of variables are: ", ncol(data))
+cat("The number of cases are: ", nrow(data))
+
+```
+
+### Question 3: Look at the variable names. Do you understand what do they mean? Which variables do you think we need to answer the question, stated above? Do you think we have sufficient amount of data? Anything else you notice here?
+
+```{r}
+# prints the column names in the dataset
+names(data)
+```
+#### Yes, the variable names are very starightforward and I am able to understand the data and meaning associated with them. From my understanding, the variables needed to answer this questioon are Type, Country, Injury,and Fatal (Y/N). In my opinion, we have sufficient data to deterimine which of the two countries is more dangerous in terms of shark attacks. 
+
+
+## Explore the data
+
+### Question 1: How many different countries are listed here in data?
+
+```{r}
+# prints the count of different countries in dataset
+cat("Number of different countries listed in the data are:", length(unique(data$Country)))
+```
+
+### Question 2: Browse the country names. Comment on what do you see. Do all the names make sense?
+#### While browsing through the country names, I notice some inaccuracies and incorrectness of data  which do not make sense.  There are continents like "Asia", oceans like "Indian ocean", unclear locations like "Between Portugal & India" and "Italy / Croatia, and special characters like "Red Sea?" and data like "EQUATORIAL GUINEA / CAMEROON"  and "NA" which do not provide any insights.
+
+
+### Quetsion 3: Next, let’s look at the year of the attack (variable Year). What is it’s data type? Does it correspond to what you expect?
+```{r}
+# prints the data type of the column 'year'
+cat("The data type of the 'Year' column is:", class(data$Year))
+```
+
+#### The datatype of the Year variable is character. Although not incorrect, it is not what I expected. I expected it to be an integer.
+
+
+### Question 4: How many missing values for Year do we have in data? What does this suggest about the observations and data quality?
+
+```{r}
+# print number of missing values in dataset
+cat("The number of missing values for the Year variable is:", sum(is.na(data$Year)))
+
+```
+
+#### This tells us that more than 70% of the data is missing the year value and the data quality is low.
+
+
+### Question 5: Find the minimum, maximum, and median value of Year.
+```{r}
+# print min, max, median value of 'year' column
+cat("The minimum value of Year is:", min(data$Year, na.rm = TRUE))
+cat("The maximum value of Year is:", max(data$Year, na.rm = TRUE))
+cat("The median value of Year is:", median(data$Year, na.rm = TRUE))
+```
+
+### Question 6: The minimum value “0” looks like a different code for missing data... So let’s take a closer look. Browser the value of Date for cases where Year = 0. Comment what do you see. How many such cases do we have? what does this tell about the scope of this dataset?
+
+#### For cases where Year=0, the dates are not providing a definite time/year. Words like 'before' and 'after', 'during' are used to define point of time. For example "Before 1958', 'No date', "World war'. Since there is no definite year provide, it provides ambiguity in the data and reduces the scope of the dataset.
+```{r}
+library(tidyverse)
+# Extract rows from dataset where year=="0000" and store these rows in another variable
+yearzerodataset = data %>% filter(Year == "0000")
+# print row count of new variable
+cat("The number of such cases in the data file are:", nrow(yearzerodataset))
+```
+
+
+### Question 7; One of the oldest dates there is “Ca. 725 B.C.”. Explain what happened and what is the source of information. What does this suggest about the used data sources?
+```{r}
+# Extract row having date == "Ca. 725 B.C" and store it in a new variable x
+print("Extraction of the row having date as Ca. 725 B.C")
+x <- data %>% filter(data$Date == "Ca. 725 B.C.")
+x
+```
+
+#### It was a sea disastor where shipwrecked sailors were attacked by sharks. The data sources used was V.M. Coppleson (1958), p.262, et al
+
+
+## Clean Data
+
+### Question 1: Now let’s look at whether the attack was fatal (the variable Fatal Y/N. As the first step, rename this variable to something more suitable, e.g. fatal. We ask you also to only keep variables you need below and drop all the others. (You may want to return to this question later and add/remove additional variables.) You may also rename other variables if you wish
+
+```{r}
+# Renaming variable "Fatal (Y/N)" to "Fatal"
+library(tidyverse)
+names(data)[names(data) == "Fatal (Y/N)"] <- "Fatal"
+#names(data)
+#data = data %>% rename("Fatal" = "Fatal (Y/N)")
+names(data)
+
+# Selecting only necessary fields from the whole dataset
+datasubset = data %>% select(Type, Country, Fatal, Year)
+names(datasubset)
+```
+
+
+### Question 2: Lets focus on reasonable recent time span only. Only keep the reasonably recent cases based on the year variable. Explain your reasoning when selecting the time span.How many cases are you left with?
+
+```{r}
+# Extracting rows with country as Australia or South Africa and storing those in a new variable
+library(tidyverse)
+AusSAonly = datasubset %>% filter(Country == "AUSTRALIA" | Country == "SOUTH AFRICA")
+# displaying data in fprma of a table
+table(AusSAonly$Year)
+```
+
+#### As we can see from the above table, the number of incidents taking place in Australia and South Africa regions increased from 2004. Thus, I will be taking 2004-2022 time span from here on. 
+
+
+```{r}
+# extracting rows having specific year values
+filtereddata = datasubset %>% filter(datasubset$Year %in% c('2004','2005','2006','2007','2008','2009','2010','2011', '2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022'))
+filtereddata
+cat("The number of cases that I am left with are:", nrow(filtereddata))
+```
+
+
+### Question 3: What kind of different values do you see in the fatal variable? Comment the values you see. Do you have an idea why do you see some of these figures?
+```{r}
+# printing different values present in the Fatal variable
+cat("Different values in the Fatal variable are:", (unique(filtereddata$Fatal)))
+
+```
+
+
+### Question 4: Now let’s convert the fatal column into a logical variable: TRUE if the attack was fatal and FALSE if not. Convert the cases where you are unsure into missings. Explain your for decisions you make here.
+
+```{r}
+# Converting fatal column into a logical variable
+filtereddata$Fatal <- ifelse(filtereddata$Fatal == 'N', "False", (ifelse(filtereddata$Fatal == 'Y', "True",NA))) 
+filtereddata
+```
+
+#### I have converted all the missing values to NA. The reason being that I don't have enough clarity on the impact they will have on the data quality if they are changed to either 'TRUE' or 'FALSE'. Doing so coulld give rise to inaccuracies thus, I think it is better if these data are not considered at all. 
+
+
+## Austalia or South Africa?
+
+### Question #1: Filter the data to only contain cases from these two countries. How many cases do you have from each country? Which percentage of those is fatal?
+
+```{r}
+library(tidyverse)
+AusAndSA <- filtereddata %>% filter(filtereddata$Country %in% c('AUSTRALIA', 'SOUTH AFRICA'))
+table(AusAndSA$Country)
+print("Overall Fatality Percentage of Australia:")
+# displays fatality rate of Australia and South Africa
+prop.table(table(AusAndSA$Fatal))
+Ausonly = AusAndSA %>%filter(AusAndSA$Country == "AUSTRALIA")
+SAonly = AusAndSA %>%filter(AusAndSA$Country == "SOUTH AFRICA")
+print("Fatality Percentage of Australia: ")
+# displays fatality rate of only Australia
+prop.table(table(Ausonly$Fatal))
+print("Fatality Percentage of South Africa:")
+# displays fatality rate of only south africa
+prop.table(table(SAonly$Fatal))
+#AusAndSA <- data7years %>% filter(Country=="AUSTRALIA"| Country== "SOUTH AFRICA")
+```
+
+### Question 2: Now try to answer the question: which country is more dangerous? Are you able to answer it? What do you think, what can this analysis and your answer be used for? Explain your reasoning.
+
+#### The percentage of fatalities is greater for Australia as compared to South Africa. Thus, according to me Australia is more dangerous than South America. My analysis can be used for digging further into the detais and incorporating the 'TYPE' in the analysis to improve it because in my opinion, as provoked attacks should not be accounted when comparing the hazardousness.
+
+
+### Question 3: Finally, returning to your analysis and the original data (not the one you have cleaned), do you see any ethical issues here? Can your results be misused? Can this data used in a harmful way?
+
+#### I do see ethical issues in this data since there are personal detail's of incidant loggers such as their name, gender, and etc. These data are private information and can be used for the wrong reasons in various ways. I believe, my conclusion is based on a surface level analysis. A deeper analysis may provide a different answer. Thus, my results could be misused to spread information which may not be entirely true. 
